@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN"
+	packages="com.logx.trace.filter,com.logx.tps">
+	<Properties>
+		<Property name="base.dir">/data/logs/trace</Property>
+		<Property name="pattern">requestTime:%d|%C|LEVEL:%p|code_Line:%L|%m%n
+		</Property>
+		<Property name="file_pattern">%d{yyyy-MM-dd-HH}</Property>
+		<Property name="layout_pattern">%level %d{DEFAULT} %X{traceId} %X{rpcId} %t
+			%c:%L %msg%n</Property>
+	</Properties>
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="${pattern}" />
+		</Console>
+		<RollingFile name="testAppender" fileName="${base.dir}/test.log"
+			filePattern="${base.dir}/test_1.log">
+			<PatternLayout>
+				<pattern>${pattern}</pattern>
+			</PatternLayout>
+			<Policies>
+				<SizeBasedTriggeringPolicy size="512 MB" />
+			</Policies>
+			<!-- 注意log4j2 Filter 创建出来的为单实例模式，所以多个配置项使用同一个Filter处理器时，会使用第一个的配置实例 -->
+			<LimitLog onMatch="NEUTRAL" level="INFO" onMismatch="DENY"
+				limitTps="20000" limitLength="1M" periodTimeMillis="1000" />
+			<!-- limitTps: 周期时间内可以写入次数，小于1 则不做限制 -->
+		</RollingFile>
+
+		<!-- root -->
+		<RollingFile name="rootAppender" fileName="${base.dir}/root.log"
+			filePattern="${base.dir}/root_1.log">
+			<PatternLayout>
+				<pattern>${pattern}</pattern>
+			</PatternLayout>
+			<!-- 单独限制写入次数 -->
+			<!-- <LimitLength onMatch="NEUTRAL" level="INFO" onMismatch="DENY"
+				periodTimeMillis="1000" limit=" 10 " /> -->
+				<!-- <LimitLog onMatch="NEUTRAL" level="INFO" onMismatch="DENY"
+				limitTps="20000" limitLength="1M" periodTimeMillis="1000" /> -->
+			<Policies>
+				<SizeBasedTriggeringPolicy size="512 MB" />
+			</Policies>
+		</RollingFile>
+
+
+		<RollingFile name="errorAppender" fileName="${base.dir}/error.log"
+			filePattern="${base.dir}/error.log.%d{yyyy-MM-dd-HH}.zip">
+			<ThresholdFilter level="ERROR" onMatch="ACCEPT"
+				onMismatch="DENY" />
+			<PatternLayout>
+				<charset>UTF-8</charset>
+				<pattern>${layout_pattern}</pattern>
+			</PatternLayout>
+			<Policies>
+				<TimeBasedTriggeringPolicy interval="1"
+					modulate="true" />
+			</Policies>
+			<DefaultRolloverStrategy max="88" />
+		</RollingFile>
+		<!-- 扩展log4j日志过滤器 -->
+		<LoggerFilter name="logFilter" enable="false"></LoggerFilter>
+	</Appenders>
+	<Loggers>
+		<asyncRoot level="INFO" includeLocation="true">
+			<AppenderRef ref="rootAppender" />
+			<AppenderRef ref="logFilter"/>
+		</asyncRoot>
+		<!-- <Root level="info"> <AppenderRef ref="rootAppender" /> <AppenderRef 
+			ref="Console"/> </Root> -->
+		<Logger name="TEST" level="info" additivity="false">
+			<AppenderRef ref="testAppender"></AppenderRef>
+			<AppenderRef ref="logFilter"/>
+		</Logger>
+		<AsyncLogger name="ASync" level="info" includeLocation="true"
+			additivity="false">
+			<AppenderRef ref="testAppender"></AppenderRef>
+			<AppenderRef ref="logFilter"/>
+		</AsyncLogger>
+		<Logger name="Sync" level="info" includeLocation="true"
+			additivity="false">
+			<AppenderRef ref="testAppender"></AppenderRef>
+			<AppenderRef ref="logFilter"/>
+		</Logger>
+		<Logger name="com.weidian.open" includeLocation="true">
+			<AppenderRef ref="errorAppender"></AppenderRef>
+			<AppenderRef ref="logFilter"/>
+		</Logger>
+	</Loggers>
+</Configuration>
