@@ -82,7 +82,7 @@
 			<AppenderRef ref="testAppender"></AppenderRef>
 			<AppenderRef ref="logFilter"/>
 		</Logger>
-		<Logger name="com.weidian.open" includeLocation="true">
+		<Logger name="com.logsx" includeLocation="true">
 			<AppenderRef ref="errorAppender"></AppenderRef>
 			<AppenderRef ref="logFilter"/>
 		</Logger>
